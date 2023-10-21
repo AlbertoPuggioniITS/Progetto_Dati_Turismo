@@ -133,3 +133,30 @@ async def elimina_alberghi(regione: str, anno: int):
     conn.commit()
     return {"message": f"Dati degli Alberghi con Regione {regione} e Anno {anno} eliminati con successo"}
 
+
+@app.get("/media_arrivi_alberghi_per_regione/")
+async def get_media_arrivi_per_regione(Regione: str):
+    cursor = conn.cursor()
+    query = "SELECT AVG(Arrivi) as Media_Arrivi FROM Alberghi WHERE Regione = ?"
+    cursor.execute(query, (Regione,))
+    result = cursor.fetchone()
+
+    if result:
+        media_arrivi = result[0]
+        return {"Media Arrivi per Regione": media_arrivi}
+    else:
+        return JSONResponse(status_code=404, content={"error": "Nessun dato trovato per la regione specificata"})
+
+
+@app.get("/media_presenze_alberghi_per_regione/")
+async def get_media_presenze_per_regione(Regione: str):
+    cursor = conn.cursor()
+    query = "SELECT AVG(Presenze) as Media_Presenze FROM Alberghi WHERE Regione = ?"
+    cursor.execute(query, (Regione,))
+    result = cursor.fetchone()
+
+    if result:
+        media_presenze = result[0]
+        return {"Media Presenze per Regione": media_presenze}
+    else:
+        return JSONResponse(status_code=404, content={"error": "Nessun dato trovato per la regione specificata"})
