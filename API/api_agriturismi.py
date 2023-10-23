@@ -23,7 +23,17 @@ class AgriturismoUpdate(BaseModel):
     Arrivi: int
     Presenze: int
 
+# Creazione del modello per la delete
+class EliminaAgriturismoRequest(BaseModel):
+    Regione: str
+    Anno: int
+    Arrivi: int
+    Presenze: int
 
+
+# ================================
+#           API's
+# ================================
 
 # API Post - creazione di un agriturismo
 @app.post("/crea_agriturismo/")
@@ -128,13 +138,17 @@ async def get_presenze_per_anno(anno: int):
 
 
 # API Delete - rimozione di un agriturismo
-@app.delete("/elimina_agriturismo/{regione}/{anno}")
-async def elimina_agriturismo(regione: str, anno: int):
-    query = "DELETE FROM Agriturismi WHERE Regione = ? AND Anno = ?"
+@app.delete("/elimina_agriturismo/")
+async def elimina_agriturismo(request: EliminaAgriturismoRequest):
     cursor = conn.cursor()
-    cursor.execute(query, (regione, anno))
+    query = "DELETE FROM Agriturismi WHERE Regione = ? AND Anno = ? AND Arrivi = ? AND Presenze = ?"
+    cursor.execute(query, (request.Regione, request.Anno, request.Arrivi, request.Presenze))
     conn.commit()
-    return {"message": f"Dati dell'agriturismo con Regione {regione} e Anno {anno} eliminati con successo"}
+
+    if cursor.rowcount > 0:
+        return {"message": "Agriturismo eliminato con successo"}
+    else:
+        return JSONResponse(status_code=404, detail="Nessun agriturismo trovato per l'eliminazione")
 
 
 # API Get - ottenimento della media degli arrivi per regione e anno
@@ -151,7 +165,7 @@ async def get_media_arrivi_per_regione(Regione: str):
     else:
         return JSONResponse(status_code=404, content={"error": "Nessun dato trovato per la regione specificata"})
 
-
+# API Get - ottenimento della media delle presenze per regione ed anno
 @app.get("/media_presenze_agriturismi_per_regione/")
 async def get_media_presenze_per_regione(Regione: str):
     cursor = conn.cursor()

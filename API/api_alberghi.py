@@ -22,6 +22,11 @@ class AlbergoUpdate(BaseModel):
     Anno: int
     Arrivi: int
     Presenze: int
+class EliminaAlbergoRequest(BaseModel):
+    Regione: str
+    Anno: int
+    Arrivi: int
+    Presenze: int
 
 # API Post - Creazione di un albergo
 @app.post("/crea_alberghi/")
@@ -44,7 +49,7 @@ async def aggiorna_albergo(albergo: AlbergoUpdate):
 
 # API Get - ottenimento dei dati da 'Arrivi' di un albergo
 @app.get("/arrivi_alberghi/")
-async def get_items():
+async def get_arrivi_alberghi():
     cursor = conn.cursor()
     cursor.execute("SELECT arrivi FROM Alberghi")
     rows = cursor.fetchall()
@@ -125,13 +130,17 @@ async def get_presenze_per_anno(anno: int):
 
 
 # API Delete - Cancellazione di un albergo
-@app.delete("/elimina_alberghi/{regione}/{anno}")
-async def elimina_alberghi(regione: str, anno: int):
-    query = "DELETE FROM Alberghi WHERE Regione = ? AND Anno = ?"
+@app.delete("/elimina_albergo/")
+async def elimina_albergo(request: EliminaAlbergoRequest):
     cursor = conn.cursor()
-    cursor.execute(query, (regione, anno))
+    query = "DELETE FROM Alberghi WHERE Regione = ? AND Anno = ? AND Arrivi = ? AND Presenze = ?"
+    cursor.execute(query, (request.Regione, request.Anno, request.Arrivi, request.Presenze))
     conn.commit()
-    return {"message": f"Dati degli Alberghi con Regione {regione} e Anno {anno} eliminati con successo"}
+
+    if cursor.rowcount > 0:
+        return {"message": "Albergo eliminato con successo"}
+    else:
+        return JSONResponse(status_code=404, detail="Nessun albergo trovato per l'eliminazione")
 
 
 @app.get("/media_arrivi_alberghi_per_regione/")

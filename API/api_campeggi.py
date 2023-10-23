@@ -23,6 +23,14 @@ class CampeggioUpdate(BaseModel):
     Arrivi: int
     Presenze: int
 
+# Classe per la delete
+class EliminaCampeggioRequest(BaseModel):
+    Regione: str
+    Anno: int
+    Arrivi: int
+    Presenze: int
+
+
 # API Post - Crea un nuovo campeggio
 @app.post("/crea_campeggi/")
 async def crea_campeggio(campeggio: CampeggioCreate):
@@ -126,13 +134,17 @@ async def get_presenze_per_anno(anno: int):
 
 
 # API Delete - Eliminazione di un campeggio (inserendo la regione e l'anno)
-@app.delete("/elimina_campeggi/{regione}/{anno}")
-async def elimina_alberghi(regione: str, anno: int):
-    query = "DELETE FROM Campeggi WHERE Regione = ? AND Anno = ?"
+@app.delete("/elimina_campeggio/")
+async def elimina_campeggio(request: EliminaCampeggioRequest):
     cursor = conn.cursor()
-    cursor.execute(query, (regione, anno))
+    query = "DELETE FROM Campeggi WHERE Regione = ? AND Anno = ? AND Arrivi = ? AND Presenze = ?"
+    cursor.execute(query, (request.Regione, request.Anno, request.Arrivi, request.Presenze))
     conn.commit()
-    return {"message": f"Dati dei Campeggi con Regione {regione} e Anno {anno} eliminati con successo"}
+
+    if cursor.rowcount > 0:
+        return {"message": "Campeggio eliminato con successo"}
+    else:
+        return JSONResponse(status_code=404, detail="Nessun campeggio trovato per l'eliminazione")
 
 @app.get("/media_arrivi_agriturismi_per_regione/")
 async def get_media_arrivi_per_regione(Regione: str):
